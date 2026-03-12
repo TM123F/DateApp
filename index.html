@@ -74,8 +74,15 @@ STRICT RULES:
     const data = await response.json();
     const reply = data.content?.[0]?.text || "Hey, sorry I missed that!";
     document.body.innerText = reply;
+    if (data.content && data.content[0]) {
+      document.body.innerText = data.content[0].text;
+    } else if (data.error) {
+      document.body.innerText = "API_ERROR: " + data.error.type + " - " + data.error.message;
+    } else {
+      document.body.innerText = "UNKNOWN: " + JSON.stringify(data);
+    }
   } catch (err) {
-    document.body.innerText = "Hey! Having some connection issues, try again? 😅";
+    document.body.innerText = "FETCH_ERROR: " + err.message;
   }
 }
 
