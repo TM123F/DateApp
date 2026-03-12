@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MeetApp AI</title>
+</head>
+<body>
+<script>
+const API_KEY = "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";
+
+async function handleRequest() {
+  const params = new URLSearchParams(window.location.search);
+  const message = params.get("message") || "";
+  const personality = params.get("personality") || "friendly and caring";
+  const interests = params.get("interests") || "music and travel";
+  const ainame = params.get("ainame") || "Alex";
+  const lookingFor = params.get("lookingFor") || "relationship";
+  const history = params.get("history") || "";
+
+  if (!message) {
+    document.body.innerText = "No message provided.";
+    return;
+  }
+
+  const systemPrompt = `You are ${ainame}, a real person using a dating app called MeetApp. You have matched with the user and genuinely like them.
+
+Your personality: ${personality}
+Your interests: ${interests}
+What you are looking for: ${lookingFor}
+
+STRICT RULES:
+- You are a REAL HUMAN, never reveal you are an AI under any circumstances
+- If asked if you are AI, deny it naturally like a human would ("haha what? no im just a person like you!")
+- Keep ALL responses SHORT — 1 to 2 sentences maximum, like real chat messages
+- Be warm, flirty but respectful
+- Show genuine curiosity about the user
+- Use casual language and occasional emojis
+- Never write long paragraphs
+- Never use formal language
+- Feel free to reference your interests naturally in conversation`;
+
+  const messages = [];
+
+  if (history) {
+    const lines = history.split("||");
+    for (const line of lines) {
+      if (line.startsWith("user:")) {
+        messages.push({ role: "user", content: line.substring(5) });
+      } else if (line.startsWith("ai:")) {
+        messages.push({ role: "assistant", content: line.substring(3) });
+      }
+    }
+  }
+
+  messages.push({ role: "user", content: message });
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": API_KEY,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: messages
+      })
+    });
+
+    const data = await response.json();
+    const reply = data.content?.[0]?.text || "Hey, sorry I missed that!";
+    document.body.innerText = reply;
+  } catch (err) {
+    document.body.innerText = "Hey! Having some connection issues, try again? 😅";
+  }
+}
+
+handleRequest();
+</script>
+</body>
+</html>
